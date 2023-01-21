@@ -1,28 +1,43 @@
 const crypto = require("crypto");
 
+// refactor out into separate function to reduce duplicate code
+const HASH_ALGORITHM = "sha3-512";
+const DIGEST_ENCODING = "hex";
+const hashData = (data) => {
+  return crypto.createHash(HASH_ALGORITHM).update(data).digest(DIGEST_ENCODING);
+};
+exports.hashData = hashData;
+
+// pulled out constants from function since they are accessible with closure anyway
+const DEFAULT_PARTITION_KEY = "0";
+const MAX_PARTITION_KEY_LENGTH = 256;
+
 exports.deterministicPartitionKey = (event) => {
-  const TRIVIAL_PARTITION_KEY = "0";
-  const MAX_PARTITION_KEY_LENGTH = 256;
-  let candidate;
+  let candidatePartitionKey = DEFAULT_PARTITION_KEY; // initialize candidatePartitionKey to the default partition key value
 
+  // get partition key from event if possible
   if (event) {
-    if (event.partitionKey) {
-      candidate = event.partitionKey;
-    } else {
-      const data = JSON.stringify(event);
-      candidate = crypto.createHash("sha3-512").update(data).digest("hex");
-    }
+    candidatePartitionKey = getPartitionKeyFromEvent(event);
   }
 
-  if (candidate) {
-    if (typeof candidate !== "string") {
-      candidate = JSON.stringify(candidate);
-    }
+  // ensure that the partition key is a string
+  if (typeof candidatePartitionKey !== "string") {
+    candidatePartitionKey = JSON.stringify(candidatePartitionKey);
+  }
+  
+  // if the partition key is too long, hash it again
+  if (candidatePartitionKey.length > MAX_PARTITION_KEY_LENGTH) {
+    candidatePartitionKey = hashData(candidatePartitionKey);
+  }
+  return candidatePartitionKey;
+};
+
+// pulled logic into separate method for readability
+const getPartitionKeyFromEvent = (event) => {
+  if (event.partitionKey) {
+    return event.partitionKey;
   } else {
-    candidate = TRIVIAL_PARTITION_KEY;
+    const data = JSON.stringify(event);
+    return hashData(data);
   }
-  if (candidate.length > MAX_PARTITION_KEY_LENGTH) {
-    candidate = crypto.createHash("sha3-512").update(candidate).digest("hex");
-  }
-  return candidate;
 };

@@ -24,7 +24,7 @@ exports.deterministicPartitionKey = (event) => {
   if (typeof candidatePartitionKey !== "string") {
     candidatePartitionKey = JSON.stringify(candidatePartitionKey);
   }
-  
+
   // if the partition key is too long, hash it again
   if (candidatePartitionKey.length > MAX_PARTITION_KEY_LENGTH) {
     candidatePartitionKey = hashData(candidatePartitionKey);
@@ -33,11 +33,5 @@ exports.deterministicPartitionKey = (event) => {
 };
 
 // pulled logic into separate method for readability
-const getPartitionKeyFromEvent = (event) => {
-  if (event.partitionKey) {
-    return event.partitionKey;
-  } else {
-    const data = JSON.stringify(event);
-    return hashData(data);
-  }
-};
+const getPartitionKeyFromEvent = (event) =>
+  event.partitionKey || hashData(JSON.stringify(event));

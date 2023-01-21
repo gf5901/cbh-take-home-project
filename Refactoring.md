@@ -9,3 +9,7 @@ You've been asked to refactor the function `deterministicPartitionKey` in [`dpk.
 You will be graded on the exhaustiveness and quality of your unit tests, the depth of your refactor, and the level of insight into your thought process provided by the written explanation.
 
 ## Your Explanation Here
+1. I pulled out constants from the functions to declutter them. 
+2. I pulled out the hashing logic into a function to reduce duplicate code and make it easier to test.
+3. I pulled out the logic for getting the partition key out of the event for readability. Also makes it easier to test smaller chunks of functionality.
+4. I added comments to each line to explain what is going on.
